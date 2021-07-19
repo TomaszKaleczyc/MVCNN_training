@@ -31,3 +31,10 @@ class MVCNNObjectClassInstance:
             axis = ax[idx] if len(self) > 1 else ax
             axis.imshow(image)
         plt.show()
+
+    def get_tensors(self):
+        """
+        Returns all instance images as torch tensor
+        expected by the model
+        """
+        raise NotImplementedError

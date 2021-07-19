@@ -9,7 +9,7 @@ from utilities import consts
 
 class MVCNNDataset(Dataset):
     """
-    
+    Manages all dataset instances
     """
 
     def __init__(self, dataset_type_name):
@@ -20,7 +20,7 @@ class MVCNNDataset(Dataset):
 
     def _get_classes_dict(self):
         """
-        
+        Creates object class list to store class metadata
         """
         iterator = enumerate(Path(consts.DATA_DIR).iterdir())
         classes_dict = [MVCNNObjectClass(class_num, class_path) for class_num, class_path in iterator]
@@ -29,14 +29,14 @@ class MVCNNDataset(Dataset):
 
     def _identify_instances(self):
         """
-        
+        Identifies all dataset instances
         """
         for mvcnn_class in self._classes_list:
             self._get_class_instances(mvcnn_class)
 
     def _get_class_instances(self, mvcnn_class):
         """
-        
+        Identifies all instances of given class
         """
         class_dataset_path = mvcnn_class.get_path()/self._dataset_type_name
         class_dataset_img_paths = self._get_dataset_img_paths(class_dataset_path)
@@ -49,7 +49,7 @@ class MVCNNDataset(Dataset):
 
     def _get_dataset_img_paths(self, class_dataset_path):
         """
-        
+        Returns image paths of a given dataset path
         """
         class_image_paths = [
             path for path in class_dataset_path.iterdir() if path.suffix.lower() in consts.IMG_SUFFIX_LIST
@@ -58,7 +58,7 @@ class MVCNNDataset(Dataset):
 
     def _get_class_dataset_instances(self, class_dataset_img_paths):
         """
-        
+        Returns instance id's of all given image paths
         """
         class_dataset_instances = np.unique(
             [path.name.split('_')[-2] for path in class_dataset_img_paths]
@@ -67,7 +67,7 @@ class MVCNNDataset(Dataset):
 
     def _get_class_instance_img_paths(self, class_dataset_instance, class_dataset_img_paths):
         """
-        
+        Returns all image paths pertaining to a given class instance
         """
         class_instance_img_paths = [
             img_path for img_path in class_dataset_img_paths if img_path.name.split('_')[-2] == class_dataset_instance
