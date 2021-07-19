@@ -78,7 +78,10 @@ class MVCNNDataset(Dataset):
         return len(self._instances_list)
 
     def __getitem__(self, idx):
-        pass
+        object_instance = self._instances_list[idx]
+        image_tensor = object_instance.get_image_tensor()
+        target_tensor = object_instance.get_target_tensor()
+        return image_tensor, target_tensor, object_instance
 
 
 

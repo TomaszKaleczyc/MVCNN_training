@@ -1,4 +1,9 @@
+import numpy as np
 from matplotlib import pyplot as plt
+
+import torch
+
+from utilities import consts
 
 
 class MVCNNObjectClassInstance:
@@ -18,7 +23,11 @@ class MVCNNObjectClassInstance:
         """
         Returns images as a list of numpy arrays
         """
-        return [plt.imread(img_path) for img_path in self._img_paths]
+        image_list = [
+            np.expand_dims(plt.imread(img_path), 0) for img_path in self._img_paths
+            ]
+        # from pdb import set_trace; set_trace()
+        return np.concatenate(image_list, axis=0)
 
     def view_images(self, figsize=(30,10)):
         """
@@ -32,9 +41,22 @@ class MVCNNObjectClassInstance:
             axis.imshow(image)
         plt.show()
 
-    def get_tensors(self):
+    def get_image_tensor(self):
         """
         Returns all instance images as torch tensor
         expected by the model
         """
-        raise NotImplementedError
+        tensor = torch.tensor(self.get_images())
+        tensor = torch.transpose(tensor, -1, 1)
+        tensor = tensor.float()
+        tensor /= 255
+        mean_vec = torch.tensor(consts.NORMALIZATION_MEAN).view(1, 3, 1, -1)
+        std_vec = torch.tensor(consts.NORMALIZATION_STD).view(1, 3, 1, -1)
+        tensor = (tensor - mean_vec) / std_vec
+        return tensor
+
+    def get_target_tensor(self):
+        """
+        Returns tensor of expected target class
+        """
+        return torch.tensor(self._class_id)
