@@ -7,6 +7,7 @@ from dataset_classes.mvcnn_object_class import MVCNNObjectClass
 from dataset_classes.mvcnn_object_class_instance import MVCNNObjectClassInstance
 from utilities import consts
 
+
 class MVCNNDataset(Dataset):
     """
     Manages all dataset instances
@@ -81,7 +82,8 @@ class MVCNNDataset(Dataset):
         object_instance = self._instances_list[idx]
         image_tensor = object_instance.get_image_tensor()
         target_tensor = object_instance.get_target_tensor()
-        return image_tensor, target_tensor, object_instance
+        instance_attributes = object_instance.get_attributes()
+        return image_tensor, target_tensor, instance_attributes
 
 
 

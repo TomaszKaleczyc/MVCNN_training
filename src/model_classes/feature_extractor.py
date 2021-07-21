@@ -2,9 +2,9 @@ import torch.nn as nn
 from torchvision import models
 
 
-class feature_extractor(nn.Module):
+class FeatureExtractor(nn.Module):
     """
-    
+    Manages the pretrained image feature extractor
     """
 
     def __init__(self):
@@ -25,3 +25,9 @@ class feature_extractor(nn.Module):
         self._requires_grad = new_state
         state_name = 'unfrozen' if self._requires_grad else 'frozen'
         print(f'Feature extractor weights {state_name}')
+
+    def weights_frozen(self):
+        """
+        Returns the parameter state of the feature extractor
+        """
+        return self._requires_grad

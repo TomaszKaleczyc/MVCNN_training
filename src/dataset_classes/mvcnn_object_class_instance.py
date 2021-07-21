@@ -1,9 +1,12 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from pathlib import Path
 
 import torch
 
 from utilities import consts
+
+NUM_CLASSES = len(list(Path(consts.DATA_DIR).iterdir()))
 
 
 class MVCNNObjectClassInstance:
@@ -59,4 +62,17 @@ class MVCNNObjectClassInstance:
         """
         Returns tensor of expected target class
         """
-        return torch.tensor(self._class_id)
+        target = torch.zeros((1, NUM_CLASSES))
+        target[0, self._class_id] = 1
+        return target
+
+    def get_attributes(self):
+        """
+        Returns additional instance stats
+        """
+        output = {
+            'class_name': self._class_name,
+            'class_id': self._class_id,
+            'instance_id': self._instance_id,
+        }
+        return output
