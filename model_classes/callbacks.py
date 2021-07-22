@@ -6,7 +6,7 @@ from pytorch_lightning.callbacks import Callback
 from utilities import consts
 
 
-class UnfreezeFeatureExtractor(Callback):
+class UnfreezePretrainedWeights(Callback):
     """
     Unfreezing the feature extractor weights and reducing the learning rate
     """
@@ -26,6 +26,10 @@ class ResetEvalResults(Callback):
     """
     Resets the evaluation objects
     """
+    def __init__(self, num_classes):
+        super().__init__()
+        self._num_classes = num_classes
+
     def on_validation_epoch_start(self, trainer: 'pl.Trainer', pl_module: 'pl.LightningModule'):
         self._reset_results(pl_module)
     
@@ -36,10 +40,10 @@ class ResetEvalResults(Callback):
         pl_module.avg_metric = torchmetrics.AverageMeter().to(pl_module.device)
         pl_module.eval_metric = torchmetrics.F1(
             threshold=consts.CLASSIFICATION_THRESHOLD,
-            num_classes=pl_module.num_classes, 
+            num_classes=self._num_classes, 
             average=consts.F1_AVERAGE
             ).to(pl_module.device)
         pl_module.secondary_eval_metric = torchmetrics.Accuracy(
             threshold=consts.CLASSIFICATION_THRESHOLD,
-            num_classes=pl_module.num_classes, 
+            num_classes=self._num_classes, 
         ).to(pl_module.device)

@@ -15,14 +15,12 @@ class MVCNNClassifier(pl.LightningModule):
     """
     
     def __init__(self,
-                 num_classes,
                  learning_rate=1e-3, 
                  feature_extractor=None,
                  num_epochs_freeze_pretrained=1, 
                  dropout_rate=0.5):
         super().__init__()
         self.save_hyperparameters()
-        self.num_classes = num_classes
         self.dropout_rate = dropout_rate
         self.num_epochs_freeze_pretrained = num_epochs_freeze_pretrained
         self.learning_rate = learning_rate
