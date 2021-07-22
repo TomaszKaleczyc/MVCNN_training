@@ -1,12 +1,9 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from pathlib import Path
 
 import torch
 
 from utilities import consts
-
-NUM_CLASSES = len(list(Path(consts.DATA_DIR).iterdir()))
 
 
 class MVCNNObjectClassInstance:
@@ -14,8 +11,11 @@ class MVCNNObjectClassInstance:
     Contains object class instance metadata and methods
     """
 
-    def __init__(self, mvcnn_class, class_instance_id, class_instance_img_paths):
-        self._class_id, self._class_name = mvcnn_class.get_attributes()
+    def __init__(self, 
+                 mvcnn_class, 
+                 class_instance_id, 
+                 class_instance_img_paths):
+        self._class_id, self._class_name, self._num_classes = mvcnn_class.get_attributes()
         self._img_paths = class_instance_img_paths
         self._instance_id = class_instance_id
 
@@ -29,7 +29,6 @@ class MVCNNObjectClassInstance:
         image_list = [
             np.expand_dims(plt.imread(img_path), 0) for img_path in self._img_paths
             ]
-        # from pdb import set_trace; set_trace()
         return np.concatenate(image_list, axis=0)
 
     def view_images(self, figsize=(30,10)):
@@ -62,7 +61,7 @@ class MVCNNObjectClassInstance:
         """
         Returns tensor of expected target class
         """
-        target = torch.zeros((1, NUM_CLASSES))
+        target = torch.zeros((1, self._num_classes))
         target[0, self._class_id] = 1
         return target
 
@@ -74,5 +73,6 @@ class MVCNNObjectClassInstance:
             'class_name': self._class_name,
             'class_id': self._class_id,
             'instance_id': self._instance_id,
+            'image_count': len(self._img_paths),
         }
         return output

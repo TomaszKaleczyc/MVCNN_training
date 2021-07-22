@@ -14,22 +14,25 @@ class MVCNNClassifier(pl.LightningModule):
     Main MVCNN model class
     """
     
-    def __init__(self, learning_rate=1e-3, 
+    def __init__(self,
+                 num_classes,
+                 learning_rate=1e-3, 
                  feature_extractor=None,
                  num_epochs_freeze_pretrained=1, 
                  dropout_rate=0.5):
         super().__init__()
         self.save_hyperparameters()
+        self.num_classes = num_classes
         self.dropout_rate = dropout_rate
         self.num_epochs_freeze_pretrained = num_epochs_freeze_pretrained
         self.learning_rate = learning_rate
         
-        # architektura:
+        # architecture:
         self._setup_feature_extractor(feature_extractor)
         self._setup_image_vector_creator()
         self._setup_predictor()
 
-        # ewaluacja:
+        # evaluation:
         self.avg_metric = None
         self.eval_metric = None
         self.secondary_eval_metric = None

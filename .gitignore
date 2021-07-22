@@ -1,5 +1,4 @@
+__pycache__
 data/modelnet40v1
 environment/mvcnn_train
-src/dataset_classes/__pycache__
-src/model_classes/__pycache__
-src/utilities/__pycache__
+output/

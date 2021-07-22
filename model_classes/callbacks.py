@@ -3,7 +3,7 @@ import torchmetrics
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import Callback
 
-from scripts import consts, dicts
+from utilities import consts
 
 
 class UnfreezeFeatureExtractor(Callback):
@@ -36,10 +36,10 @@ class ResetEvalResults(Callback):
         pl_module.avg_metric = torchmetrics.AverageMeter().to(pl_module.device)
         pl_module.eval_metric = torchmetrics.F1(
             threshold=consts.CLASSIFICATION_THRESHOLD,
-            num_classes=len(dicts.POLE_GENERAL_CLASSES), 
+            num_classes=pl_module.num_classes, 
             average=consts.F1_AVERAGE
             ).to(pl_module.device)
         pl_module.secondary_eval_metric = torchmetrics.Accuracy(
             threshold=consts.CLASSIFICATION_THRESHOLD,
-            num_classes=len(dicts.POLE_GENERAL_CLASSES), 
+            num_classes=pl_module.num_classes, 
         ).to(pl_module.device)
