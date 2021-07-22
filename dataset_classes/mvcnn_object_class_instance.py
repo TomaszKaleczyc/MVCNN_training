@@ -76,3 +76,9 @@ class MVCNNObjectClassInstance:
             'image_count': len(self._img_paths),
         }
         return output
+
+    def belongs_to_class(self, class_id):
+        """
+        Checks if instance is of given class
+        """
+        return self._class_id == class_id

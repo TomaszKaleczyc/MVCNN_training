@@ -23,6 +23,18 @@ class MVCNNObjectClass:
         """
         return self._id, self._name, self._num_classes
 
+    def get_summary(self):
+        """
+        Returns attributes for the summary DataFrame
+        """
+        summary_dict = {
+            'class_id': self._id,
+            'class_name': self._name,
+            'num_instances': len(self._instance_id_list),
+            'num_images': self._instance_img_count,
+        }
+        return summary_dict
+
     def update_summary(self, class_instance):
         """
         Updates class summary with class instance attributes

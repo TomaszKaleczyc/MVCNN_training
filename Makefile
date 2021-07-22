@@ -11,5 +11,9 @@ create-env:
 	python3 -m pip install -r $(REQUIREMENTS_PATH)# && \
 	# ipython kernel install --user --name=$(VENV_NAME)
 
-activate-env:
+activate-env-command:
 	@echo source $(VENV_ACTIVATE_PATH)
+
+
+run-tensorboard:
+	tensorboard --logdir ./output/

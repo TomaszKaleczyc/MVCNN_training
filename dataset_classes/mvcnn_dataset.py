@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from pathlib import Path
 
 from torch.utils.data import Dataset
@@ -13,24 +14,26 @@ class MVCNNDataset(Dataset):
     Manages all dataset instances
     """
 
-    def __init__(self, dataset_type_name, num_classes):
-        self._num_classes = num_classes
+    def __init__(self, dataset_type_name, num_classes=None, verbose=True):   
         self._type_name = dataset_type_name
-        self._classes_list = self._get_classes_dict()
+        self._num_classes = num_classes
+        self._classes_list = self._get_classes_list()
         self._instances_list = []
         self._identify_instances()
-        self._print_dataset_summary()
+        if verbose:
+            self._print_dataset_summary()
 
-    def _get_classes_dict(self):
+    def _get_classes_list(self):
         """
         Creates object class list to store class metadata
         """
-        iterator = enumerate(Path(consts.DATA_DIR).iterdir())
-        classes_dict = [
+        iterator = list(enumerate(Path(consts.DATA_DIR).iterdir()))
+        if self._num_classes is None:
+            self._num_classes = len(iterator)
+        classes_list = [
             MVCNNObjectClass(class_num, class_path, self._num_classes) for class_num, class_path in iterator if class_num < self._num_classes
             ]
-        return classes_dict
-        
+        return classes_list
 
     def _identify_instances(self):
         """
@@ -90,6 +93,21 @@ class MVCNNDataset(Dataset):
         for class_object in self._classes_list:
             class_object.print_summary()
 
+    def get_summary_df(self):
+        """
+        Returns DataFrame with summary
+        """
+        summary_dict = {
+            'class_id': [],
+            'class_name': [],
+            'num_instances': [],
+            'num_images': [],
+        }
+        for class_object in self._classes_list:
+            for key, value in class_object.get_summary().items():
+                summary_dict[key].append(value)
+        return pd.DataFrame(summary_dict)
+
     def __len__(self):
         return len(self._instances_list)
 
@@ -100,6 +118,21 @@ class MVCNNDataset(Dataset):
         instance_attributes = object_instance.get_attributes()
         return image_tensor, target_tensor, instance_attributes
 
+    def view_random_instances(self, class_id=None, num_instances=1):
+        """
+        Displays random class instances
+        """
+        if class_id is None:
+            class_id = self._get_random_class_id()
+        class_instances = [instance for instance in self._instances_list if instance.belongs_to_class(class_id)]
+        random_instances = np.random.choice(class_instances, size=num_instances, replace=False)
+        for instance in random_instances:
+            instance.view_images()
 
-
-
+    def _get_random_class_id(self):
+        """
+        Returns random class id
+        """
+        random_class = np.random.choice(self._classes_list, 1)[0]
+        class_id, *_ = random_class.get_attributes()
+        return class_id
