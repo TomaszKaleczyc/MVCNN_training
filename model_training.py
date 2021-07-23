@@ -18,7 +18,7 @@ def mvcnn_argparser(epilog=None):
     )
 
     parser.add_argument('--NUM_CLASSES', type=int, default=None, help='Number of classes used in training')
-    parser.add_argument('--LEARNING_RATE, type=1e-3, default=None, help='Model initial learning rate')
+    parser.add_argument('--LEARNING_RATE', type=1e-3, default=None, help='Model initial learning rate')
     parser.add_argument('--LEARNING_RATE_REDUCTION_FACTOR', type=1e3, default=None, 
                         help='Factor by which the learning rate is divided after the feature extractor weights are unfrozen')
     parser.add_argument('--NUM_EPOCHS', type=int, default=20, help='Number of training epochs')
