@@ -7,6 +7,7 @@ from torch.nn import functional as F
 import pytorch_lightning as pl
 
 from model_classes.feature_extractor import FeatureExtractor
+from settings import utils
 
 
 class MVCNNClassifier(pl.LightningModule):
@@ -15,12 +16,14 @@ class MVCNNClassifier(pl.LightningModule):
     """
     
     def __init__(self,
+                 num_classes,
                  learning_rate=1e-3, 
                  feature_extractor=None,
                  num_epochs_freeze_pretrained=1, 
                  dropout_rate=0.5):
         super().__init__()
         self.save_hyperparameters()
+        self._num_classes = utils.get_num_classes(num_classes)
         self.dropout_rate = dropout_rate
         self.num_epochs_freeze_pretrained = num_epochs_freeze_pretrained
         self.learning_rate = learning_rate
@@ -65,7 +68,7 @@ class MVCNNClassifier(pl.LightningModule):
             nn.Dropout(self.dropout_rate),
             nn.Linear(global_vector_input_dim, 144),
             nn.ReLU(),
-            nn.Linear(144, 4),
+            nn.Linear(144, self._num_classes),
         )
         
     def forward(self, x):

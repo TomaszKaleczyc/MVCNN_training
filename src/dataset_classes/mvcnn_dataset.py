@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 
 from dataset_classes.mvcnn_object_class import MVCNNObjectClass
 from dataset_classes.mvcnn_object_class_instance import MVCNNObjectClassInstance
-from utilities import consts
+from settings import consts, utils
 
 
 class MVCNNDataset(Dataset):
@@ -16,7 +16,7 @@ class MVCNNDataset(Dataset):
 
     def __init__(self, dataset_type_name, num_classes=None, verbose=True):   
         self._type_name = dataset_type_name
-        self._num_classes = num_classes
+        self._num_classes = utils.get_num_classes(num_classes)
         self._classes_list = self._get_classes_list()
         self._instances_list = []
         self._identify_instances()
@@ -28,8 +28,6 @@ class MVCNNDataset(Dataset):
         Creates object class list to store class metadata
         """
         iterator = list(enumerate(Path(consts.DATA_DIR).iterdir()))
-        if self._num_classes is None:
-            self._num_classes = len(iterator)
         classes_list = [
             MVCNNObjectClass(class_num, class_path, self._num_classes) for class_num, class_path in iterator if class_num < self._num_classes
             ]

@@ -2,7 +2,7 @@ from torch.utils.data import DataLoader
 from pytorch_lightning import LightningDataModule
 
 from dataset_classes.mvcnn_dataset import MVCNNDataset
-from utilities import consts
+from settings import consts
 
 
 class MVCNNDataModule(LightningDataModule):

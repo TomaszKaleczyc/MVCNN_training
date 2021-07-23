@@ -18,8 +18,8 @@ def mvcnn_argparser(epilog=None):
     )
 
     parser.add_argument('--NUM_CLASSES', type=int, default=None, help='Number of classes used in training')
-    parser.add_argument('--LEARNING_RATE', type=1e-3, default=None, help='Model initial learning rate')
-    parser.add_argument('--LEARNING_RATE_REDUCTION_FACTOR', type=1e3, default=None, 
+    parser.add_argument('--LEARNING_RATE', type=float, default=1e-3, help='Model initial learning rate')
+    parser.add_argument('--LEARNING_RATE_REDUCTION_FACTOR', type=float, default=1e3, 
                         help='Factor by which the learning rate is divided after the feature extractor weights are unfrozen')
     parser.add_argument('--NUM_EPOCHS', type=int, default=20, help='Number of training epochs')
     parser.add_argument('--NUM_EPOCHS_FREEZE_PRETRAINED', type=int, default=20, 
@@ -40,6 +40,7 @@ if __name__ == '__main__':
         )
 
     model = MVCNNClassifier(
+        num_classes=args.NUM_CLASSES,
         learning_rate=args.LEARNING_RATE,
         num_epochs_freeze_pretrained=args.NUM_EPOCHS_FREEZE_PRETRAINED,
         dropout_rate=args.DROPOUT_RATE,

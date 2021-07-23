@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 
 import torch
 
-from utilities import consts
+from settings import consts
 
 
 class MVCNNObjectClassInstance:
