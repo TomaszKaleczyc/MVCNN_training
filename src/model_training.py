@@ -5,7 +5,7 @@ from pytorch_lightning import Trainer
 
 from dataset_classes.mvcnn_data_module import MVCNNDataModule
 from model_classes.mvcnn import MVCNNClassifier
-from model_classes.callbacks import UnfreezePretrainedWeights, ResetEvalResults
+from model_classes.callbacks import UnfreezePretrainedWeights
 
 
 def mvcnn_argparser(epilog=None):
@@ -47,9 +47,14 @@ if __name__ == '__main__':
         )
 
     callbacks = [
-        ModelCheckpoint(monitor='val_f1', verbose=True, mode='max'),
+        ModelCheckpoint(
+            filename='mvcnn-e{epoch:.03d}-val_f1{validation/f1:.3f}',
+            monitor='validation/f1', 
+            save_top_k=3,
+            verbose=True, 
+            mode='max'
+            ),
         UnfreezePretrainedWeights(args.LEARNING_RATE_REDUCTION_FACTOR),
-        ResetEvalResults(args.NUM_CLASSES)
     ]
 
     trainer = Trainer(

@@ -4,10 +4,12 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
+import torchmetrics
+
 import pytorch_lightning as pl
 
 from model_classes.feature_extractor import FeatureExtractor
-from settings import utils
+from settings import consts, utils
 
 
 class MVCNNClassifier(pl.LightningModule):
@@ -34,9 +36,17 @@ class MVCNNClassifier(pl.LightningModule):
         self._setup_predictor()
 
         # evaluation:
-        self.avg_metric = None
-        self.eval_metric = None
-        self.secondary_eval_metric = None
+        self.avg_metric = torchmetrics.AverageMeter().to(self.device)
+        self.eval_metric = torchmetrics.F1(
+            threshold=consts.CLASSIFICATION_THRESHOLD,
+            num_classes=self._num_classes, 
+            average=consts.F1_AVERAGE
+            ).to(self.device)
+        self.secondary_eval_metric = torchmetrics.Accuracy(
+            threshold=consts.CLASSIFICATION_THRESHOLD,
+            num_classes=self._num_classes, 
+        ).to(self.device)
+
         
     def _setup_feature_extractor(self, feature_extractor):
         """
@@ -83,7 +93,7 @@ class MVCNNClassifier(pl.LightningModule):
         output_vector = self.predictor(global_vector)
         return output_vector.view(1, -1)
     
-    def _loss_step(self, batch, batch_idx, eval=False, criterion=F.cross_entropy):
+    def _loss_step(self, batch, batch_idx, dataset_name, criterion=F.cross_entropy):
         """
         Base training/validation loop step
         """
@@ -93,81 +103,57 @@ class MVCNNClassifier(pl.LightningModule):
         y_hat = self(x)
         loss = criterion(y_hat, target_class)
         y_hat_smax = torch.softmax(y_hat, dim=1)
-        if self.avg_metric is not None:
-            self.avg_metric.update(loss)
-        if self.eval_metric is not None:
-            self.eval_metric.update(y_hat_smax, target_class)           
-        if self.secondary_eval_metric is not None:
-            self.secondary_eval_metric.update(y_hat_smax, y.int())
+        self.avg_metric.update(loss)
+        self.eval_metric.update(y_hat_smax, target_class)           
+        self.secondary_eval_metric.update(y_hat_smax, y.int())
+        self.log(f'{dataset_name}/loss', loss)
         return loss
   
     def training_step(self, batch, batch_idx):
-        """
-        Training loop step
-        """
-        loss = self._loss_step(batch, batch_idx)
-        self.log('train_loss', loss)
-        return loss
+        return self._loss_step(batch, batch_idx, dataset_name='train')
+
+
+    def training_epoch_end(self, outputs):
+        self._epoch_end('train')
     
     def validation_step(self, batch, batch_idx):
-        """
-        Validation loop step
-        """
-        loss = self._loss_step(batch, batch_idx, eval=True)
-        self.log('val_loss', loss)
+        return self._loss_step(batch, batch_idx, dataset_name='validation')
 
     def validation_epoch_end(self, outputs):
-        """
-        End of validation step
-        """
-        avg_loss, eval_metric_score, secondary_eval_metric_score = self._eval_epoch_end()
-
-        self.log('avg_val_loss', avg_loss)
-        print('Avg Loss val', avg_loss)
-        
-        self.log('val_f1', eval_metric_score)
-        print('F1 val', eval_metric_score)
-        
-        self.log('val_accuracy', secondary_eval_metric_score)
-        print('Accuracy VAL', secondary_eval_metric_score)
+        self._epoch_end('validation')
 
     def test_step(self, batch, batch_idx):
-        """
-        Test loop step
-        """
-        loss = self._loss_step(batch, batch_idx, eval=True)
-        self.log('test_loss', loss)
+        return self._loss_step(batch, batch_idx, dataset_name='test')
 
     def test_epoch_end(self, outputs):
-        """
-        End of test step
-        """
-        avg_loss, eval_metric_score, secondary_eval_metric_score = self._eval_epoch_end()
+        self._epoch_end('validation')
 
-        self.log('avg_test_loss', avg_loss)
-        print('Avg Loss na test', avg_loss)
-
-        self.log('test_f1', eval_metric_score)
-        print('F1 na test', eval_metric_score)
-
-        self.log('test_accuracy', secondary_eval_metric_score)
-        print('Accuracy na TEST', secondary_eval_metric_score)
-
-    def _eval_epoch_end(self):
+    def _epoch_end(self, dataset_name):
         """
-        Standard evaluation epoch end step
+        Standard epoch end step
         """
+        print('='*60)
+        print(f'Eval stats for {dataset_name.upper()}')
         self._print_stats()
         avg_loss = self.avg_metric.compute()
         eval_metric_score = self.eval_metric.compute()
         secondary_eval_metric_score = self.secondary_eval_metric.compute()
-        return avg_loss, eval_metric_score, secondary_eval_metric_score
+        self.log(f'{dataset_name}/loss', avg_loss)
+        print(f'Avg Loss na {dataset_name}', avg_loss)
+
+        self.log(f'{dataset_name}/f1', eval_metric_score)
+        print(f'F1 - {dataset_name}', eval_metric_score)
+
+        self.log(f'{dataset_name}/accuracy', secondary_eval_metric_score)
+        print(f'Accuracy - {dataset_name}', secondary_eval_metric_score)
+
+        for metric in [self.avg_metric, self.eval_metric, self.secondary_eval_metric]:
+            metric.reset()
 
     def _print_stats(self):
         """
         Displays the evaluation results per class
         """
-        print('\nEval stats:')
         tp = self.eval_metric.tp.cpu().numpy()
         tn = self.eval_metric.tn.cpu().numpy()
         fp = self.eval_metric.fp.cpu().numpy()
