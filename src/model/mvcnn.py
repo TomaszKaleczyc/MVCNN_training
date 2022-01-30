@@ -1,3 +1,4 @@
+from typing import Optional, Tuple
 import numpy as np
 
 import torch
@@ -8,8 +9,9 @@ import torchmetrics
 
 import pytorch_lightning as pl
 
-from model_classes.feature_extractor import FeatureExtractor
-from settings import consts, utils
+from model.feature_extractor import FeatureExtractor
+from settings import data_settings, model_settings
+from utilities import utils
 
 
 class MVCNNClassifier(pl.LightningModule):
@@ -18,9 +20,9 @@ class MVCNNClassifier(pl.LightningModule):
     """
     
     def __init__(self,
-                 num_classes,
-                 learning_rate=1e-3, 
-                 feature_extractor=None,
+                 num_classes: int,
+                 learning_rate: float = 1e-3, 
+                 feature_extractor: Optional[nn.Module]=None,
                  num_epochs_freeze_pretrained=1, 
                  dropout_rate=0.5):
         super().__init__()
@@ -38,17 +40,17 @@ class MVCNNClassifier(pl.LightningModule):
         # evaluation:
         self.avg_metric = torchmetrics.AverageMeter().to(self.device)
         self.eval_metric = torchmetrics.F1(
-            threshold=consts.CLASSIFICATION_THRESHOLD,
+            threshold=model_settings.CLASSIFICATION_THRESHOLD,
             num_classes=self._num_classes, 
-            average=consts.F1_AVERAGE
+            average=model_settings.F1_AVERAGE
             ).to(self.device)
         self.secondary_eval_metric = torchmetrics.Accuracy(
-            threshold=consts.CLASSIFICATION_THRESHOLD,
+            threshold=model_settings.CLASSIFICATION_THRESHOLD,
             num_classes=self._num_classes, 
         ).to(self.device)
 
         
-    def _setup_feature_extractor(self, feature_extractor):
+    def _setup_feature_extractor(self, feature_extractor: nn.Module):
         """
         Defines the model feature extractor
         """
@@ -59,8 +61,11 @@ class MVCNNClassifier(pl.LightningModule):
         if self.feature_extractor.weights_frozen():
             self.feature_extractor.switch_freeze()
     
-    def _setup_image_vector_creator(self, feature_extractor_out_dim=1000, 
-                                    image_vector_creator_out_dim=512):
+    def _setup_image_vector_creator(
+            self, 
+            feature_extractor_out_dim: int = 1000,
+            image_vector_creator_out_dim: int = 512
+            ):
         """
         Defines the layers creating per image vectors
         """
@@ -70,7 +75,7 @@ class MVCNNClassifier(pl.LightningModule):
             nn.ReLU(),
         )
         
-    def _setup_predictor(self, global_vector_input_dim=512):
+    def _setup_predictor(self, global_vector_input_dim: int = 512):
         """
         Defines the layers responsible for the final prediction
         """
@@ -81,7 +86,7 @@ class MVCNNClassifier(pl.LightningModule):
             nn.Linear(144, self._num_classes),
         )
         
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         x = x[0]  # TODO: batch processing
         
         image_features = self.feature_extractor(x)
@@ -93,7 +98,13 @@ class MVCNNClassifier(pl.LightningModule):
         output_vector = self.predictor(global_vector)
         return output_vector.view(1, -1)
     
-    def _loss_step(self, batch, batch_idx, dataset_name, criterion=F.cross_entropy):
+    def _loss_step(
+            self, 
+            batch: Tuple[Tensor, Tensor], 
+            batch_idx: int, 
+            dataset_name: str, 
+            criterion=F.cross_entropy
+        ) -> Tensor:
         """
         Base training/validation loop step
         """
@@ -109,26 +120,25 @@ class MVCNNClassifier(pl.LightningModule):
         self.log(f'{dataset_name}/loss', loss)
         return loss
   
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int) -> Tensor:
         return self._loss_step(batch, batch_idx, dataset_name='train')
-
 
     def training_epoch_end(self, outputs):
         self._epoch_end('train')
     
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int) -> Tensor:
         return self._loss_step(batch, batch_idx, dataset_name='validation')
 
     def validation_epoch_end(self, outputs):
         self._epoch_end('validation')
 
-    def test_step(self, batch, batch_idx):
+    def test_step(self, batch: Tuple[Tensor, Tensor], batch_idx: int) -> Tensor:
         return self._loss_step(batch, batch_idx, dataset_name='test')
 
     def test_epoch_end(self, outputs):
         self._epoch_end('validation')
 
-    def _epoch_end(self, dataset_name):
+    def _epoch_end(self, dataset_name: str):
         """
         Standard epoch end step
         """
@@ -173,11 +183,17 @@ class MVCNNClassifier(pl.LightningModule):
         """
         Configuring the net optimization methods
         """
-        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        parameter_groups = [
+            {'params': self.feature_extractor.parameters(), 'weight_decay': model_settings.FEATURE_EXTRACTOR_WEIGHT_DECAY},
+            {'params': self.image_vector_creator.parameters(), 'weight_decay': model_settings.IMAGE_VECTOR_CREATOR_WEIGHT_DECAY},
+            {'params': self.predictor.parameters(), 'weight_decay': model_settings.PREDICTOR_WEIGHT_DECAY}
+        ]
+        return torch.optim.Adam(parameter_groups, lr=self.learning_rate)
 
-    def predict(self, image_tensor: Tensor):
+    def predict(self, image_tensor: Tensor) -> Tuple[Tensor, Tensor]:
         """
-        
+        Returns the predicted class and class probabilities
+        for a given image tensor
         """
         if len(image_tensor.shape) < 5:
             image_tensor = image_tensor.unsqueeze(0)

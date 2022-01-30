@@ -1,4 +1,4 @@
-import torch.nn as nn
+from torch import nn, Tensor
 from torchvision import models
 
 
@@ -12,7 +12,7 @@ class FeatureExtractor(nn.Module):
         self._feature_extractor = models.resnet50(pretrained=True)
         self._requires_grad = True
 
-    def forward(self, x):
+    def forward(self, x: 'Tensor') -> Tensor:
         return self._feature_extractor(x)
 
     def switch_freeze(self):
@@ -26,7 +26,7 @@ class FeatureExtractor(nn.Module):
         state_name = 'unfrozen' if self._requires_grad else 'frozen'
         print(f'Feature extractor weights {state_name}')
 
-    def weights_frozen(self):
+    def weights_frozen(self) -> bool:
         """
         Returns the parameter state of the feature extractor
         """

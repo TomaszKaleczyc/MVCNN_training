@@ -3,7 +3,7 @@ class MVCNNObjectClass:
     Contains object class metadata
     """
 
-    def __init__(self, idx, class_path, num_classes):
+    def __init__(self, idx: int, class_path: str, num_classes: int):
         self._id = idx
         self._path = class_path
         self._name = class_path.name
@@ -23,7 +23,7 @@ class MVCNNObjectClass:
         """
         return self._id, self._name, self._num_classes
 
-    def get_summary(self):
+    def get_summary(self) -> dict:
         """
         Returns attributes for the summary DataFrame
         """

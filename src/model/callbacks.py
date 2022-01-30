@@ -7,7 +7,7 @@ class UnfreezePretrainedWeights(Callback):
     Unfreezing the feature extractor weights 
     and reducing the learning rate by given factor
     """
-    def __init__(self, learning_rate_reduction_factor):
+    def __init__(self, learning_rate_reduction_factor: float):
         super().__init__()
         self._learning_rate_reduction_factor = learning_rate_reduction_factor
 

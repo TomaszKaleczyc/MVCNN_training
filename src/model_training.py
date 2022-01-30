@@ -3,9 +3,9 @@ import argparse
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning import Trainer
 
-from dataset_classes.mvcnn_data_module import MVCNNDataModule
-from model_classes.mvcnn import MVCNNClassifier
-from model_classes.callbacks import UnfreezePretrainedWeights
+from dataset.mvcnn_data_module import MVCNNDataModule
+from model.mvcnn import MVCNNClassifier
+from model.callbacks import UnfreezePretrainedWeights
 
 
 def mvcnn_argparser(epilog=None):

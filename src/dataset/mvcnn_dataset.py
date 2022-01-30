@@ -1,12 +1,15 @@
+from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd
-from pathlib import Path
+from pathlib import Path, PosixPath
 
+from torch import Tensor
 from torch.utils.data import Dataset
 
-from dataset_classes.mvcnn_object_class import MVCNNObjectClass
-from dataset_classes.mvcnn_object_class_instance import MVCNNObjectClassInstance
-from settings import consts, utils
+from dataset.mvcnn_object_class import MVCNNObjectClass
+from dataset.mvcnn_object_class_instance import MVCNNObjectClassInstance
+from settings import data_settings
+from utilities import utils
 
 
 class MVCNNDataset(Dataset):
@@ -14,7 +17,12 @@ class MVCNNDataset(Dataset):
     Manages all dataset instances
     """
 
-    def __init__(self, dataset_type_name, num_classes=None, verbose=True):   
+    def __init__(
+            self, 
+            dataset_type_name: str, 
+            num_classes: Optional[int] = None, 
+            verbose: bool = True
+            ):   
         self._type_name = dataset_type_name
         self._num_classes = utils.get_num_classes(num_classes)
         self._classes_list = self._get_classes_list()
@@ -23,11 +31,11 @@ class MVCNNDataset(Dataset):
         if verbose:
             self._print_dataset_summary()
 
-    def _get_classes_list(self):
+    def _get_classes_list(self) -> List['MVCNNObjectClass']:
         """
         Creates object class list to store class metadata
         """
-        iterator = list(enumerate(Path(consts.DATA_DIR).iterdir()))
+        iterator = list(enumerate(Path(data_settings.DATA_DIR).iterdir()))
         classes_list = [
             MVCNNObjectClass(class_num, class_path, self._num_classes) for class_num, class_path in iterator if class_num < self._num_classes
             ]
@@ -40,7 +48,7 @@ class MVCNNDataset(Dataset):
         for mvcnn_class in self._classes_list:
             self._get_class_instances(mvcnn_class)
 
-    def _get_class_instances(self, mvcnn_class):
+    def _get_class_instances(self, mvcnn_class: 'MVCNNObjectClass'):
         """
         Identifies all instances of given class
         """
@@ -55,16 +63,16 @@ class MVCNNDataset(Dataset):
             self._instances_list.append(class_instance)
             mvcnn_class.update_summary(class_instance)
 
-    def _get_dataset_img_paths(self, class_dataset_path):
+    def _get_dataset_img_paths(self, class_dataset_path: PosixPath) -> List[PosixPath]:
         """
         Returns image paths of a given dataset path
         """
         class_image_paths = [
-            path for path in class_dataset_path.iterdir() if path.suffix.lower() in consts.IMG_SUFFIX_LIST
+            path for path in class_dataset_path.iterdir() if path.suffix.lower() in data_settings.IMG_SUFFIX_LIST
             ]
         return class_image_paths
 
-    def _get_class_dataset_instances(self, class_dataset_img_paths):
+    def _get_class_dataset_instances(self, class_dataset_img_paths: List[PosixPath]) -> List['MVCNNObjectClassInstance']:
         """
         Returns instance id's of all given image paths
         """
@@ -73,7 +81,11 @@ class MVCNNDataset(Dataset):
         )
         return class_dataset_instances
 
-    def _get_class_instance_img_paths(self, class_dataset_instance, class_dataset_img_paths):
+    def _get_class_instance_img_paths(
+            self, 
+            class_dataset_instance: MVCNNObjectClassInstance, 
+            class_dataset_img_paths: List[PosixPath]
+            ) -> List[PosixPath]:
         """
         Returns all image paths pertaining to a given class instance
         """
@@ -109,7 +121,7 @@ class MVCNNDataset(Dataset):
     def __len__(self):
         return len(self._instances_list)
 
-    def __getitem__(self, idx: int):
+    def __getitem__(self, idx: int) -> Tuple[Tensor, Tensor, dict]:
         object_instance = self.get_instance(idx)
         image_tensor = object_instance.get_image_tensor()
         target_tensor = object_instance.get_target_tensor()
@@ -127,7 +139,7 @@ class MVCNNDataset(Dataset):
         for instance in random_instances:
             instance.view_images()
 
-    def _get_random_class_id(self):
+    def _get_random_class_id(self) -> int:
         """
         Returns random class id
         """
@@ -135,13 +147,13 @@ class MVCNNDataset(Dataset):
         class_id, *_ = random_class.get_attributes()
         return class_id
 
-    def get_instance(self, idx: int):
+    def get_instance(self, idx: int) -> 'MVCNNObjectClassInstance':
         """
         Returns the object instance
         """
         return self._instances_list[idx]
 
-    def get_random_instance(self):
+    def get_random_instance(self) -> 'MVCNNObjectClassInstance':
         """
         Returns a random instance
         """

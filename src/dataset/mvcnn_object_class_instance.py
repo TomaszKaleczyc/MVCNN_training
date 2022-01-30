@@ -1,9 +1,12 @@
+from typing import List, Tuple
 import numpy as np
 from matplotlib import pyplot as plt
 
 import torch
+from torch.tensor import Tensor
 
-from settings import consts
+from dataset.mvcnn_object_class import MVCNNObjectClass
+from settings import data_settings
 
 
 class MVCNNObjectClassInstance:
@@ -12,12 +15,16 @@ class MVCNNObjectClassInstance:
     """
 
     def __init__(self, 
-                 mvcnn_class, 
-                 class_instance_id, 
-                 class_instance_img_paths):
-        self.class_id, self._class_name, self._num_classes = mvcnn_class.get_attributes()
+                 mvcnn_class: MVCNNObjectClass, 
+                 class_instance_id: int, 
+                 class_instance_img_paths: List[str]):
+        self._class_id, self._class_name, self._num_classes = mvcnn_class.get_attributes()
         self._img_paths = class_instance_img_paths
         self._instance_id = class_instance_id
+
+    @property
+    def class_id(self):
+        return self._class_id
 
     @property
     def class_name(self):
@@ -38,7 +45,7 @@ class MVCNNObjectClassInstance:
             ]
         return np.concatenate(image_list, axis=0)
 
-    def view_images(self, figsize=(30,10)):
+    def view_images(self, figsize: Tuple[int, int]=(30,10)):
         """
         Shows all instance images in a single row
         """
@@ -50,7 +57,7 @@ class MVCNNObjectClassInstance:
             axis.imshow(image)
         plt.show()
 
-    def get_image_tensor(self):
+    def get_image_tensor(self) -> Tensor:
         """
         Returns all instance images as torch tensor
         expected by the model
@@ -59,12 +66,12 @@ class MVCNNObjectClassInstance:
         tensor = torch.transpose(tensor, -1, 1)
         tensor = tensor.float()
         tensor /= 255
-        mean_vec = torch.tensor(consts.NORMALIZATION_MEAN).view(1, 3, 1, -1)
-        std_vec = torch.tensor(consts.NORMALIZATION_STD).view(1, 3, 1, -1)
+        mean_vec = torch.tensor(data_settings.NORMALIZATION_MEAN).view(1, 3, 1, -1)
+        std_vec = torch.tensor(data_settings.NORMALIZATION_STD).view(1, 3, 1, -1)
         tensor = (tensor - mean_vec) / std_vec
         return tensor
 
-    def get_target_tensor(self):
+    def get_target_tensor(self) -> Tensor:
         """
         Returns tensor of expected target class
         """
@@ -72,7 +79,7 @@ class MVCNNObjectClassInstance:
         target[0, self.class_id] = 1
         return target
 
-    def get_attributes(self):
+    def get_attributes(self) -> dict:
         """
         Returns additional instance stats
         """
@@ -84,7 +91,7 @@ class MVCNNObjectClassInstance:
         }
         return output
 
-    def belongs_to_class(self, class_id):
+    def belongs_to_class(self, class_id: int) -> bool:
         """
         Checks if instance is of given class
         """
