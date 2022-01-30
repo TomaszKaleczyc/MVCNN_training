@@ -15,9 +15,16 @@ class MVCNNObjectClassInstance:
                  mvcnn_class, 
                  class_instance_id, 
                  class_instance_img_paths):
-        self._class_id, self._class_name, self._num_classes = mvcnn_class.get_attributes()
+        self.class_id, self._class_name, self._num_classes = mvcnn_class.get_attributes()
         self._img_paths = class_instance_img_paths
         self._instance_id = class_instance_id
+
+    @property
+    def class_name(self):
+        return self._class_name
+
+    def __repr__(self):
+        return f'Instance #{self._instance_id}: {self._class_name}'
 
     def __len__(self):
         return len(self._img_paths)
@@ -62,7 +69,7 @@ class MVCNNObjectClassInstance:
         Returns tensor of expected target class
         """
         target = torch.zeros((1, self._num_classes))
-        target[0, self._class_id] = 1
+        target[0, self.class_id] = 1
         return target
 
     def get_attributes(self):
@@ -71,7 +78,7 @@ class MVCNNObjectClassInstance:
         """
         output = {
             'class_name': self._class_name,
-            'class_id': self._class_id,
+            'class_id': self.class_id,
             'instance_id': self._instance_id,
             'image_count': len(self._img_paths),
         }
@@ -81,4 +88,5 @@ class MVCNNObjectClassInstance:
         """
         Checks if instance is of given class
         """
-        return self._class_id == class_id
+        return self.class_id == class_id
+

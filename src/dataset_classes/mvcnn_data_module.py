@@ -1,3 +1,4 @@
+from torch.utils import data
 from torch.utils.data import DataLoader
 from pytorch_lightning import LightningDataModule
 
@@ -23,4 +24,14 @@ class MVCNNDataModule(LightningDataModule):
         return DataLoader(self._val_dataset, batch_size=self._batch_size, shuffle=False, num_workers=consts.NUM_WORKERS)
 
     def test_dataloader(self):
+        raise NotImplementedError
+
+    def get_dataset(self, dataset_name: str):
+        """
+        Returns selected dataset
+        """
+        if dataset_name == 'train':
+            return self._train_dataset
+        if dataset_name == 'val':
+            return self._val_dataset
         raise NotImplementedError

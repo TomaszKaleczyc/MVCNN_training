@@ -1,7 +1,7 @@
 import numpy as np
 
 import torch
-import torch.nn as nn
+from torch import nn, Tensor
 from torch.nn import functional as F
 
 import torchmetrics
@@ -174,3 +174,14 @@ class MVCNNClassifier(pl.LightningModule):
         Configuring the net optimization methods
         """
         return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+
+    def predict(self, image_tensor: Tensor):
+        """
+        
+        """
+        if len(image_tensor.shape) < 5:
+            image_tensor = image_tensor.unsqueeze(0)
+        output = self.train(False)(image_tensor)
+        probabilities = F.softmax(output)
+        predicted_class = probabilities.argmax(dim=1)
+        return predicted_class, probabilities

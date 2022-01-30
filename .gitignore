@@ -2,3 +2,4 @@ __pycache__
 data/modelnet40v1
 environment/mvcnn_train
 output/
+_bckp

@@ -109,14 +109,14 @@ class MVCNNDataset(Dataset):
     def __len__(self):
         return len(self._instances_list)
 
-    def __getitem__(self, idx):
-        object_instance = self._instances_list[idx]
+    def __getitem__(self, idx: int):
+        object_instance = self.get_instance(idx)
         image_tensor = object_instance.get_image_tensor()
         target_tensor = object_instance.get_target_tensor()
         instance_attributes = object_instance.get_attributes()
         return image_tensor, target_tensor, instance_attributes
 
-    def view_random_instances(self, class_id=None, num_instances=1):
+    def view_random_instances(self, class_id: int=None, num_instances: int=1):
         """
         Displays random class instances
         """
@@ -134,3 +134,19 @@ class MVCNNDataset(Dataset):
         random_class = np.random.choice(self._classes_list, 1)[0]
         class_id, *_ = random_class.get_attributes()
         return class_id
+
+    def get_instance(self, idx: int):
+        """
+        Returns the object instance
+        """
+        return self._instances_list[idx]
+
+    def get_random_instance(self):
+        """
+        Returns a random instance
+        """
+        idx = np.random.randint(0, len(self))
+        return self.get_instance(idx)
+
+    def __repr__(self):
+        return f'Dataset: {self._type_name}: {self._num_classes} classes, {len(self)} instances'
