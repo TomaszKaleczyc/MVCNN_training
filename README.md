@@ -7,7 +7,7 @@ Creating, training and evaluating a [Multi-View Convolutional Neural Network](ht
 ## Resources
 
 * Dataset: [ModelNet40v1](https://drive.uca.fr/d/80ea3fccdd8942c6a062/)
-* Workint environment: Ubuntu18.04 LTS / Python 3.6.9 / virtualenv
+* Working environment: Ubuntu18.04 LTS / Python 3.6.9 / virtualenv
 * Use the `Makefile` commands to:
   * create the project virtual environment
   * print the source terminal command to activate environment in terminal
