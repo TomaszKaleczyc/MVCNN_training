@@ -23,10 +23,10 @@ class MVCNNDataset(Dataset):
             num_classes: Optional[int] = None, 
             verbose: bool = True
             ):   
-        self._type_name = dataset_type_name
-        self._num_classes = utils.get_num_classes(num_classes)
-        self._classes_list = self._get_classes_list()
-        self._instances_list = []
+        self._type_name: str = dataset_type_name
+        self._num_classes: int = utils.get_num_classes(num_classes)
+        self._classes_list: List[MVCNNObjectClass] = self._get_classes_list()
+        self._instances_list: List[MVCNNObjectClassInstance] = []
         self._identify_instances()
         if verbose:
             self._print_dataset_summary()
